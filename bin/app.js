@@ -1,5 +1,5 @@
 #!/usr/bin/env node 
-
+const ffmpeg = require('fluent-ffmpeg');
 const NodeMediaServer = require('..');
 let argv = require('minimist')(process.argv.slice(2),
   {
@@ -106,3 +106,30 @@ nms.on('donePlay', (id, StreamPath, args) => {
   console.log('[NodeEvent on donePlay]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
 });
 
+
+function streamHLStoRTMP(hlsUrl, rtmpServer) {
+  // Replace these with your actual HLS URL and RTMP server URL
+  const inputUrl = hlsUrl;
+  const outputUrl = rtmpServer;
+
+  ffmpeg(inputUrl)
+    .videoCodec('libx264')
+    .audioCodec('aac')
+    .audioBitrate('192k')
+    .outputOptions('-preset ultrafast')
+    .format('flv')
+    .output(outputUrl)
+    .on('end', () => {
+      console.log('Streaming finished');
+    })
+    .on('error', (err) => {
+      console.error('Error:', err);
+    })
+    .run();
+}
+
+// Example usage
+const hlsUrl = 'https://dai.google.com/linear/hls/event/x7rXWd2ERZ2tvyQWPmO1HA/master.m3u8';
+const rtmpServer = 'rtmp://localhost:1935/live/stream_key';
+
+streamHLStoRTMP(hlsUrl, rtmpServer);
